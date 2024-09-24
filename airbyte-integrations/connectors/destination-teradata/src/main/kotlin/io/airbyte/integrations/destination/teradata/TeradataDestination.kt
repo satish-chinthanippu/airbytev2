@@ -38,6 +38,7 @@ class TeradataDestination :
     ),
     Destination {
     override fun getDefaultConnectionProperties(config: JsonNode): Map<String, String> {
+        LOGGER.info("Satish - getDefaultConnectionProperties")
         val additionalParameters: MutableMap<String, String> = HashMap()
         if (config.has(PARAM_SSL) && config[PARAM_SSL].asBoolean()) {
             LOGGER.debug("SSL Enabled")
@@ -52,6 +53,11 @@ class TeradataDestination :
         additionalParameters[ENCRYPTDATA] =
             ENCRYPTDATA_ON
         return additionalParameters
+    }
+
+    override fun getDatabaseName(config: JsonNode): String {
+        LOGGER.info("Satish  getDatabaseName Config - {}", config)
+        return config[JdbcUtils.SCHEMA_KEY].asText()
     }
 
     override fun getSqlGenerator(config: JsonNode): JdbcSqlGenerator {
