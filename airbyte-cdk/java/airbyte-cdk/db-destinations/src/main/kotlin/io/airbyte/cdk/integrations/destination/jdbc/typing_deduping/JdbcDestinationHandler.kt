@@ -67,7 +67,7 @@ abstract class JdbcDestinationHandler<DestinationState>(
         dbmetadata.getTables(catalogName, id.rawNamespace, id.rawName, null)
 
     @Throws(Exception::class)
-    private fun isFinalTableEmpty(id: StreamId): Boolean {
+    protected open fun isFinalTableEmpty(id: StreamId): Boolean {
         return !jdbcDatabase.queryBoolean(
             dslContext
                 .select(
@@ -395,7 +395,8 @@ abstract class JdbcDestinationHandler<DestinationState>(
         }
         val intendedColumns =
             LinkedHashMap(
-                stream!!.columns.entries.associate { it.key.name to toJdbcTypeName(it.value) }
+                stream!!.columns.entries.associate {
+                    it.key.name to toJdbcTypeName(it.value) }
             )
 
         // Filter out Meta columns since they don't exist in stream config.
@@ -511,7 +512,7 @@ abstract class JdbcDestinationHandler<DestinationState>(
     protected abstract fun toDestinationState(json: JsonNode): DestinationState
 
     companion object {
-        private val LOGGER: Logger = LoggerFactory.getLogger(JdbcDestinationHandler::class.java)
+        protected val LOGGER: Logger = LoggerFactory.getLogger(JdbcDestinationHandler::class.java)
         protected const val DESTINATION_STATE_TABLE_NAME = "_airbyte_destination_state"
         protected const val DESTINATION_STATE_TABLE_COLUMN_NAME = "name"
         protected const val DESTINATION_STATE_TABLE_COLUMN_NAMESPACE = "namespace"

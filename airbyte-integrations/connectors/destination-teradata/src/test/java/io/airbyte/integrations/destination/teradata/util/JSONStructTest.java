@@ -29,7 +29,7 @@ public class JSONStructTest {
    */
   @BeforeEach
   void setup() {
-    struct = new JSONStruct("JSON", new Object[] {json});
+    struct = new JSONStruct("JSON", (String[]) new Object[] {json});
   }
 
   /**
@@ -48,7 +48,7 @@ public class JSONStructTest {
   @Test
   void testGetAttributesException() {
     SQLException exception = assertThrows(SQLException.class, () -> {
-      Map<Integer, String> map = new HashMap<>();
+      Map<String, Class<?>> map = new HashMap<>();
       struct.getAttributes(map);
     });
     String expectedMessage = "getAttributes (Map) NOT SUPPORTED";

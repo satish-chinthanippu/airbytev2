@@ -124,7 +124,6 @@ class TeradataSqlOperations : JdbcSqlOperations() {
             JavaBaseConstants.COLUMN_NAME_AB_EXTRACTED_AT,
             JavaBaseConstants.COLUMN_NAME_AB_META,
         )
-        LOGGER.info("Satish - TeradataSqlOperations - insertRecordsInternalV2 - insert query - {}", insertQueryComponent)
         database.execute { con ->
             try {
                 val stmt = con.prepareStatement(insertQueryComponent)
@@ -153,10 +152,6 @@ class TeradataSqlOperations : JdbcSqlOperations() {
                     stmt.setTimestamp(++i, extractedAt)
                     stmt.setString(++i, airbyteMeta)
                     stmt.addBatch()
-                    LOGGER.info("Satish - TeradataSqlOperations - insertRecordsInternalV2 - uuid - {}", uuid)
-                    LOGGER.info("Satish - TeradataSqlOperations - insertRecordsInternalV2 - jsonData - {}", jsonData)
-                    LOGGER.info("Satish - TeradataSqlOperations - insertRecordsInternalV2 - airbyteMeta - {}", airbyteMeta)
-                    LOGGER.info("Satish - TeradataSqlOperations - insertRecordsInternalV2 - extractedAt - {}", extractedAt)
                 }
                 stmt.executeBatch()
             } catch (e: Exception) {

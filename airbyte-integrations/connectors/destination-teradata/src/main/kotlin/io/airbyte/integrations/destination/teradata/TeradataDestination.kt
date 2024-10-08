@@ -14,13 +14,16 @@ import io.airbyte.cdk.integrations.destination.jdbc.AbstractJdbcDestination
 import io.airbyte.cdk.integrations.destination.jdbc.JdbcBufferedConsumerFactory
 import io.airbyte.cdk.integrations.destination.jdbc.typing_deduping.JdbcDestinationHandler
 import io.airbyte.cdk.integrations.destination.jdbc.typing_deduping.JdbcSqlGenerator
+import io.airbyte.cdk.integrations.destination.jdbc.typing_deduping.JdbcV1V2Migrator
 import io.airbyte.commons.json.Jsons
 import io.airbyte.integrations.base.destination.typing_deduping.DestinationHandler
+import io.airbyte.integrations.base.destination.typing_deduping.DestinationV1V2Migrator
 import io.airbyte.integrations.base.destination.typing_deduping.SqlGenerator
 import io.airbyte.integrations.base.destination.typing_deduping.migrators.Migration
 import io.airbyte.integrations.base.destination.typing_deduping.migrators.MinimumDestinationState
 import io.airbyte.integrations.destination.teradata.typing_deduping.TeradataDestinationHandler
 import io.airbyte.integrations.destination.teradata.typing_deduping.TeradataSqlGenerator
+import io.airbyte.integrations.destination.teradata.typing_deduping.TeradataV1V2Migrator
 import java.io.IOException
 import java.io.PrintWriter
 import java.nio.charset.StandardCharsets
@@ -38,7 +41,6 @@ class TeradataDestination :
     ),
     Destination {
     override fun getDefaultConnectionProperties(config: JsonNode): Map<String, String> {
-        LOGGER.info("Satish - getDefaultConnectionProperties")
         val additionalParameters: MutableMap<String, String> = HashMap()
         if (config.has(PARAM_SSL) && config[PARAM_SSL].asBoolean()) {
             LOGGER.debug("SSL Enabled")
@@ -55,8 +57,12 @@ class TeradataDestination :
         return additionalParameters
     }
 
+    override fun getV1V2Migrator(
+        database: JdbcDatabase,
+        databaseName: String
+    ): DestinationV1V2Migrator = TeradataV1V2Migrator(database)
+
     override fun getDatabaseName(config: JsonNode): String {
-        LOGGER.info("Satish  getDatabaseName Config - {}", config)
         return config[JdbcUtils.SCHEMA_KEY].asText()
     }
 
