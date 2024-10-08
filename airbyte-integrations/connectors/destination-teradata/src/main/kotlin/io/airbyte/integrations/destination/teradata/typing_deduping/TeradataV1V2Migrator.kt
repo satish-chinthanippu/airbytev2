@@ -26,7 +26,6 @@ class TeradataV1V2Migrator(database: JdbcDatabase) :
             null,
             tableName
         )
-        LOGGER.info("TeradataV1V2Migrator - getTableIfExists - namespace - {} - tableName - {}, handler - {}", namespace, tableName, handler)
         return handler
     }
 

@@ -91,10 +91,8 @@ abstract class JdbcDestinationHandler<DestinationState>(
                     id.rawNamespace,
                     id.rawName
                 )
-                LOGGER.info("Satish - JdbcDestinationHandler - getInitialRawTableState - tableExists ")
                 try {
                     getTableFromMetadata(dbmetadata!!, id).use { table ->
-                        LOGGER.info("Satish - JdbcDestinationHandler - getInitialRawTableState - table - {}", table)
                         return@executeMetadataQuery table.next()
                     }
                 } catch (e: SQLException) {
@@ -102,7 +100,6 @@ abstract class JdbcDestinationHandler<DestinationState>(
                     throw SQLRuntimeException(e)
                 }
             }
-        LOGGER.info("Satish - JdbcDestinationhandler - getInitialRawTableState - tableExists - {}", tableExists)
         if (!tableExists) {
             // There's no raw table at all. Therefore there are no unprocessed raw records, and this
             // sync
@@ -320,9 +317,7 @@ abstract class JdbcDestinationHandler<DestinationState>(
         return destinationStatesFuture.thenApply {
             destinationStates: Map<AirbyteStreamNameNamespacePair, DestinationState> ->
             try {
-                LOGGER.info("Satish - JdbcDestinationHandler - retrieveState - stream id - {}", streamConfig)
                 val finalTableDefinition = findExistingTable(streamConfig!!.id)
-                LOGGER.info("Satish - JdbcDestinationHandler - retrieveState - finalTableDefinition - {}", finalTableDefinition)
                 val isSchemaMismatch: Boolean
                 val isFinalTableEmpty: Boolean
                 if (finalTableDefinition.isPresent) {
@@ -337,13 +332,11 @@ abstract class JdbcDestinationHandler<DestinationState>(
                     isFinalTableEmpty = true
                 }
                 val initialRawTableState = getInitialRawTableState(streamConfig.id)
-                LOGGER.info("Satish - JdbcDestinationHandler - getInitialRawTableState - initialRawTableState - {}", initialRawTableState)
                 val destinationState =
                     destinationStates.getOrDefault(
                         streamConfig.id.asPair(),
                         toDestinationState(Jsons.emptyObject())
                     )
-                LOGGER.info("Satish - JdbcDestinationHandler - getInitialRawTableState - destinationState - {}", destinationState)
                 return@thenApply DestinationInitialStatus<DestinationState>(
                     streamConfig,
                     finalTableDefinition.isPresent,
@@ -400,11 +393,9 @@ abstract class JdbcDestinationHandler<DestinationState>(
             // soft-reset
             return false
         }
-        LOGGER.info("Satish - JDBCDestinationHandler - existingSchemaMatchesStreamConfig")
         val intendedColumns =
             LinkedHashMap(
                 stream!!.columns.entries.associate {
-                    LOGGER.info("Satish - JDBCDestinationHandler - existingSchemaMatchesStreamConfig - name - {}, value - {}", it.key.name, it.value)
                     it.key.name to toJdbcTypeName(it.value) }
             )
 

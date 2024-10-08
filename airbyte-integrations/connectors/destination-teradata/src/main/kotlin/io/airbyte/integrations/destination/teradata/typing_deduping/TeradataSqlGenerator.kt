@@ -56,7 +56,6 @@ class TeradataSqlGenerator(
                 schema,
             ),
         )
-        LOGGER.info("Satish - TeradataSqlGenerator - createSchema - query - {}", query)
         return query
     }
 
@@ -81,22 +80,16 @@ class TeradataSqlGenerator(
             ),
         )
             .`as`(COLUMN_NAME_AB_META)
-        LOGGER.info("Satish - TeradataSqlGenerator - buildAirbyteMetaColumn - query - {}", query)
         return query
     }
 
     override fun cdcDeletedAtNotNullCondition(): Condition {
-        val temp = field(name(COLUMN_NAME_AB_LOADED_AT)).isNotNull()
+        return field(name(COLUMN_NAME_AB_LOADED_AT)).isNotNull()
             .and(extractColumnAsJson(cdcDeletedAtColumn).notEqual("null"));
-        LOGGER.info("Satish - TeradataSqlGenerator - cdcDeletedAtNotNullCondition - temp - {}", temp)
-        return temp
     }
     private fun extractColumnAsJson(column: ColumnId): Field<Any> {
-        val temp = field((("cast(" + name(COLUMN_NAME_DATA)) + ".JSONExtract('$." + field(column.originalName)) + "') as VARCHAR(100) )")
-        LOGGER.info("Satish - TeradataSqlGenerator - extractColumnAsJson - temp - {}", temp)
-        return temp
+        return field((("cast(" + name(COLUMN_NAME_DATA)) + ".JSONExtract('$." + field(column.originalName)) + "') as VARCHAR(100) )")
     }
-
 
 
     override fun extractRawDataFields(
@@ -104,9 +97,7 @@ class TeradataSqlGenerator(
         useExpensiveSaferCasting: Boolean
     ): MutableList<Field<*>> {
         val fields: MutableList<Field<*>> = ArrayList()
-        LOGGER.info("Satish - TeradataSqlGenerator - extractRawDataFields - columns - {}", columns)
         columns.forEach { (key, value) ->
-            LOGGER.info("Satish - TeradataSqlGenerator - extractRawDataFields - key - {} - value - {}", key, value)
             if (value == AirbyteProtocolType.UNKNOWN || value.typeName == "STRUCT" || value.typeName == "ARRAY") {
                 fields.add(
                     field(
@@ -174,7 +165,6 @@ class TeradataSqlGenerator(
                 )
             }
         }
-        LOGGER.info("Satish - TeradataSqlGenerator - extractRawDataFields - fields - {}", fields)
         return fields
     }
 
@@ -182,7 +172,6 @@ class TeradataSqlGenerator(
         primaryKey: List<ColumnId>,
         cursorField: Optional<ColumnId>
     ): Field<Int> {
-        LOGGER.info("Satish - TeradataSqlGenerator - getRowNumber - primaryKey - {}", primaryKey)
         val primaryKeyFields: List<Field<*>> =
             primaryKey
                 .stream()
@@ -192,7 +181,6 @@ class TeradataSqlGenerator(
                     )
                 }
                 .collect(Collectors.toList<Field<*>>())
-        LOGGER.info("Satish - TeradataSqlGenerator - getRowNumber - primaryKeyFields - {}", primaryKeyFields)
         val orderedFields: MutableList<SortField<Any>> = ArrayList()
 
 
@@ -200,21 +188,17 @@ class TeradataSqlGenerator(
             orderedFields.add(field(quotedName(columnId.name)).desc().nullsLast(),
             )
         }
-        LOGGER.info("Satish - TeradataSqlGenerator - getRowNumber - cursorField - {}", cursorField)
 
         orderedFields.add(field("{0}", quotedName(COLUMN_NAME_AB_EXTRACTED_AT)).desc());
-        LOGGER.info("Satish - TeradataSqlGenerator - getRowNumber - orderedFields - {}", orderedFields)
         val query = rowNumber()
             .over()
             .partitionBy(primaryKeyFields)
             .orderBy(orderedFields)
             .`as`(ROW_NUMBER_COLUMN_NAME)
-        LOGGER.info("Satish - TeradataSqlGenerator - getRowNumber - query - {}", query)
         return query
     }
 
     override fun toDialectType(airbyteProtocolType: AirbyteProtocolType): DataType<*> {
-        LOGGER.info("Satish - TeradataSqlGenerator - toDialectType - airbyteProtocolType - {} ", airbyteProtocolType)
         val s = when (airbyteProtocolType) {
             AirbyteProtocolType.STRING -> SQLDataType.VARCHAR(64000)
             AirbyteProtocolType.BOOLEAN -> SQLDataType.BOOLEAN
@@ -222,15 +206,12 @@ class TeradataSqlGenerator(
             AirbyteProtocolType.NUMBER -> SQLDataType.FLOAT
             else -> super.toDialectType(airbyteProtocolType)
         }
-        LOGGER.info("Satish - TeradataSqlGenerator - toDialectType - return type - {} ", s)
         return s
     }
 
     override fun createTable(stream: StreamConfig, suffix: String, force: Boolean): Sql {
-        LOGGER.info("TeradataSqlGenerator - CreateTable - tablename - {}, force? - {}", stream.id.finalName, force)
         val finalTableIdentifier: String =
             stream.id.finalName + suffix.lowercase(Locale.getDefault())
-        LOGGER.info("TeradataSqlGenerator - CreateTable - finalTableIdentifier- {}", finalTableIdentifier)
         if (!force) {
             return separately(
                 createTableSql(
@@ -253,7 +234,6 @@ class TeradataSqlGenerator(
                 stream.columns,
             ),
         )
-        LOGGER.info("TeradataSqlGenerator - CreateTable -  sql - {}", sl)
         return sl
     }
 
@@ -266,9 +246,7 @@ class TeradataSqlGenerator(
         val createTableSql = dsl.createTable(name(namespace, tableName))
             .columns(buildFinalTableFields(columns, getFinalTableMetaColumns(true)))
             .sql
-        LOGGER.info("Satish - TeradataSqlGenerator - CreateTableSql - CreateTableSQL: {}", createTableSql)
         val query = addMultisetKeyword(createTableSql)
-        LOGGER.info("Satish - TeradataSqlGenerator - CreateTableSql - query: {}", query)
         return query
     }
 
@@ -285,7 +263,6 @@ class TeradataSqlGenerator(
         return "$beforeCreate MULTISET $afterCreate NO PRIMARY INDEX"
     }
 
-    //TODO: Check with parten implementation if something is missing
     override fun overwriteFinalTable(stream: StreamId, finalSuffix: String): Sql {
         val spaceName: String = stream.finalNamespace
         val tableName: String = stream.finalName + finalSuffix
@@ -302,17 +279,10 @@ class TeradataSqlGenerator(
                 newTableName,
             ),
         )
-        LOGGER.info("Satish - TeradataSqlGenerator - overwriteFinalTable - query: {}", query)
         return query
     }
 
     override fun migrateFromV1toV2(streamId: StreamId, namespace: String, tableName: String): Sql {
-        LOGGER.info("namespace: {}, tablename: {}", namespace, tableName)
-        LOGGER.info(
-            "stream id namespace: {}, stream id tablename: {}",
-            streamId.rawNamespace,
-            streamId.rawName,
-        )
         val rawTableName: Name = name(streamId.rawNamespace, streamId.rawName)
         return transactionally(
             createV2RawTableFromV1Table(rawTableName, namespace, tableName),
@@ -338,7 +308,6 @@ class TeradataSqlGenerator(
             namespace,
             tableName,
         )
-        LOGGER.info("create createV2RawTableFromV1Table: {}", query)
         return query
     }
 
@@ -373,24 +342,20 @@ class TeradataSqlGenerator(
                     useExpensiveSaferCasting,
                 ),
             )
-        LOGGER.info("Satish - TeradataSqlGenerator - insertAndDeleteTransaction - rawTableRowsWithCast: {}", rawTableRowsWithCast)
         val finalTableFields = buildFinalTableFields(
             streamConfig.columns,
             getFinalTableMetaColumns(true),
         )
-        LOGGER.info("Satish - TeradataSqlGenerator - insertAndDeleteTransaction - finalTableFields: {}", finalTableFields)
         val rowNumber = getRowNumber(
             streamConfig.primaryKey,
             streamConfig.cursor,
         )
-        LOGGER.info("Satish - TeradataSqlGenerator - insertAndDeleteTransaction - rowNumber: {}", rowNumber)
         val filteredRows =
             name(NUMBERED_ROWS_CTE_ALIAS).`as`(
                 DSL.select(finalTableFields)
                     .select(rowNumber)
                     .from(rawTableRowsWithCast),
             )
-        LOGGER.info("Satish - TeradataSqlGenerator - insertAndDeleteTransaction - filteredRows: {}", filteredRows)
 
 
         // Used for append-dedupe mode.
@@ -414,7 +379,6 @@ class TeradataSqlGenerator(
                         ),
                 )
                 .getSQL(ParamType.INLINED)
-        LOGGER.info("Satish - TeradataSqlGenerator - insertAndDeleteTransaction - insertStmtWithDedupe: {}", insertStmtWithDedupe)
         // Used for append and overwrite modes.
         val insertStmt =
             insertIntoFinalTable(
@@ -429,7 +393,6 @@ class TeradataSqlGenerator(
                         .from(rawTableRowsWithCast),
                 )
                 .getSQL(ParamType.INLINED)
-        LOGGER.info("Satish - TeradataSqlGenerator - insertAndDeleteTransaction - insertStmt: {}", insertStmt)
 
         val deleteStmt = deleteFromFinalTable(
             finalSchema,
@@ -437,15 +400,12 @@ class TeradataSqlGenerator(
             streamConfig.primaryKey,
             streamConfig.cursor,
         )
-        LOGGER.info("Satish - TeradataSqlGenerator - insertAndDeleteTransaction - deleteStmt: {}", deleteStmt)
         val deleteCdcDeletesStmt =
             if (streamConfig.columns.containsKey(cdcDeletedAtColumn))
                 deleteFromFinalTableCdcDeletes(finalSchema, finalTable)
             else
                 ""
-        LOGGER.info("Satish - TeradataSqlGenerator - insertAndDeleteTransaction - deleteCdcDeletesStmt: {}", deleteCdcDeletesStmt)
         val checkpointStmt = checkpointRawTable(rawSchema, rawTable, minRawTimestamp)
-        LOGGER.info("Satish - TeradataSqlGenerator - insertAndDeleteTransaction - checkpointStmt: {}", checkpointStmt)
         if (streamConfig.destinationSyncMode !== DestinationSyncMode.APPEND_DEDUP) {
             return transactionally(insertStmt, checkpointStmt)
         }

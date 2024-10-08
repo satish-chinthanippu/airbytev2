@@ -124,9 +124,7 @@ public class TeradataDestinationAcceptanceTest extends JdbcDestinationAcceptance
                                                     final String streamName,
                                                     final String namespace,
                                                     final JsonNode streamSchema)
-      throws Exception {
-    LOGGER.info("TeradataDestinationAcceptanceTest - retrieveRecords - streamName : {}, namespace : {}, streamSchema - {} ", streamName, namespace, streamSchema);
-    return retrieveRecordsFromTable(namingResolver.getRawTableName(streamName), namespace);
+      throws Exception {return retrieveRecordsFromTable(namingResolver.getRawTableName(streamName), namespace);
 
   }
 
@@ -156,8 +154,8 @@ public class TeradataDestinationAcceptanceTest extends JdbcDestinationAcceptance
     final String deleteQuery = String.format(String.format(DELETE_DATABASE, SCHEMA_NAME));
     final String dropQuery = String.format(String.format(DROP_DATABASE, SCHEMA_NAME));
     try {
-      //database.execute(deleteQuery);
-     // database.execute(dropQuery);
+      database.execute(deleteQuery);
+      database.execute(dropQuery);
     } finally {
       DataSourceFactory.close(dataSource);
     }

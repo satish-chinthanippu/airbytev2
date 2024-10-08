@@ -18,7 +18,8 @@ import io.airbyte.integrations.base.destination.typing_deduping.migrators.Minimu
 import io.airbyte.protocol.models.v0.AirbyteStreamNameNamespacePair
 import java.sql.SQLException
 import java.time.OffsetDateTime
-import java.util.*
+import java.util.Optional
+import java.util.Locale
 import org.jooq.Condition
 import org.jooq.SQLDialect
 import org.jooq.conf.ParamType
@@ -49,18 +50,14 @@ class TeradataDestinationHandler(
 
 
     override fun toJdbcTypeName(airbyteType: AirbyteType): String {
-        LOGGER.info("Satish - TeradataDestinationHandler - toJdbcTypeName : {}" , airbyteType.typeName)
         val test =
             if (airbyteType is AirbyteProtocolType) {
-                LOGGER.info("Satish - TeradataDestinationHandler - toJdbcTypeName : comanion type")
                 Companion.toJdbcTypeName(airbyteType)
             } else {
-                LOGGER.info("Satish - TeradataDestinationHandler - toJdbcTypeName : non comanion type")
                 when (airbyteType.typeName) {
                     Struct.TYPE,
                     UnsupportedOneOf.TYPE,
                     Array.TYPE -> "json"
-
                     Union.TYPE -> toJdbcTypeName((airbyteType as Union).chooseType())
                     else -> throw IllegalArgumentException("Unsupported AirbyteType: $airbyteType")
                 }
@@ -87,7 +84,6 @@ class TeradataDestinationHandler(
                 )
                 .getSQL(ParamType.INLINED),
         )
-        LOGGER.info("Satish - TeradataDestinationHandler - isFinalTableEmpty - query - {}", query)
         return query
     }
 
@@ -121,7 +117,6 @@ class TeradataDestinationHandler(
                     },
             )
             .getSQL(ParamType.INLINED)
-        LOGGER.info("Satish - TeradataDestinationHandler - getDeleteStatesSql - delete query - {}", query)
         return query
     }
 
@@ -163,7 +158,6 @@ class TeradataDestinationHandler(
                         stateJson,
                         null,
                     ).getSQL(ParamType.INLINED)
-                LOGGER.info("Satish - TeradataDestinationHandler - commitDestinationStates - insertStatesStep - {}", insertStatesStep)
                 sqlStatementsDestinationState.add(insertStatesStep)
             }
 
@@ -189,7 +183,6 @@ class TeradataDestinationHandler(
                     stateTableUpdatedAtType,
                 )
                 .getSQL(ParamType.INLINED)
-            LOGGER.info("Satish - TeradataDestinationHandler - getAllDestinationStates - sqlStatement - {}", sqlStatement)
             try {
                 jdbcDatabase.execute(sqlStatement)
             } catch (e: SQLException) {
@@ -279,7 +272,6 @@ class TeradataDestinationHandler(
         val transactions: List<List<String>> = sql.transactions
         for (transaction in transactions) {
             try {
-                LOGGER.info("Satish - TeradataDestinationHandler - execute - query {}", transaction)
                 jdbcDatabase.executeWithinTransaction(transaction)
             } catch (e: SQLException) {
                 if (e.message!!.contains("with the specified name already exists")) {
@@ -301,7 +293,6 @@ class TeradataDestinationHandler(
         private const val DESTINATION_STATE_TABLE_COLUMN_NAMESPACE = "namespace"
 
         private fun toJdbcTypeName(airbyteProtocolType: AirbyteProtocolType): String {
-            LOGGER.info("Satish toJdbcTypeName: {}", airbyteProtocolType)
             val test =
                 when (airbyteProtocolType) {
                     AirbyteProtocolType.STRING -> "text"
