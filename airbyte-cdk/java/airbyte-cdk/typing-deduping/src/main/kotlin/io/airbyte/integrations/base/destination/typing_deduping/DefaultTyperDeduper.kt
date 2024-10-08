@@ -116,9 +116,10 @@ class DefaultTyperDeduper<DestinationState : MinimumDestinationState>(
 
     @Throws(Exception::class)
     override fun prepareFinalTables() {
+        LOGGER.info("Satish - DefaultTyperDeduper - prepareFinalTables")
         check(!::overwriteStreamsWithTmpTable.isInitialized) { "Tables were already prepared." }
         overwriteStreamsWithTmpTable = ConcurrentHashMap.newKeySet()
-        LOGGER.info("Preparing tables")
+        LOGGER.info("Satish - Preparing tables - {}", destinationInitialStatuses)
 
         val prepareTablesFutureResult =
             CompletableFutures.allOf(
@@ -148,10 +149,14 @@ class DefaultTyperDeduper<DestinationState : MinimumDestinationState>(
         // _airbyte_tmp table.
         return CompletableFuture.supplyAsync(
             {
+
                 val stream = initialState.streamConfig
+                LOGGER.info("Satish - DefaultTyperDeduper - prepareTablesFuture - stream - {}, initialState - {}", stream, initialState)
                 try {
                     if (initialState.isFinalTablePresent) {
                         LOGGER.info("Final Table exists for stream {}", stream.id.finalName)
+                        LOGGER.info("stream.destinationSyncMode - {}", stream.destinationSyncMode)
+                        LOGGER.info("stream.destinationSyncMode - {}", stream.destinationSyncMode)
                         // The table already exists. Decide whether we're writing to it directly, or
                         // using a tmp table.
                         if (stream.destinationSyncMode == DestinationSyncMode.OVERWRITE) {
